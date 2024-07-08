@@ -1,0 +1,57 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+// THIS DATA IS PULLED THROUGH [...slug.astro]
+const { title, description, ogImage, date, author } = Astro.props;
+
+// DYNAMICALLY SETTING THE CANONICAL URL
+const slug = Astro.params.slug;
+const siteUrl = "https://.";
+const canonicalURL = `${siteUrl}/archive/${slug}/`;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta name="generator" content={Astro.generator} />
+		<meta property="og:image" content={ogImage.src} />
+	</head>
+	<PageLayout
+		title={title}
+		description={description}
+		keywords=""
+		canonicalURL={canonicalURL}
+		robotsContent="index, follow"
+	>
+		<main>
+			<article>
+				<div class="text-center">
+					<header class="page-header-border-up">
+						<h1 class="page-header-text-up">
+							{title}
+						</h1>
+					</header>
+					<section class="p-4">
+						<p class="text-4xl">{description}</p>
+						<p>By {author}</p>
+					</section>
+				</div>
+				<section>
+					<img src={ogImage.src} alt="" />
+					<slot />
+					<br />
+					<time class="block">
+						{
+							date.toLocaleString("en-US", {
+								timeZone: "America/Los_Angeles",
+								year: "2-digit",
+								month: "2-digit",
+								day: "2-digit",
+							})
+						}
+					</time>
+				</section>
+			</article>
+		</main>
+	</PageLayout>
+
+</html>

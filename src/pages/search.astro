@@ -1,0 +1,215 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+
+---
+
+<PageLayout
+    title="Search for Articles"
+    description="you can search through all our published articles here, on the article search page"
+    keywords=""
+    canonicalURL=""
+    robotsContent="noindex, follow"
+>
+    <main>
+        <!-- LOADING ANIMATION IS DEFINED IN THE POSTLAYOUT FILE -->
+        <section>
+            <header>
+                <h1>
+                    Article Search
+                </h1>
+            </header>
+            <br />
+            
+            <!-- SEARCH FORM -->
+            <form class="form">
+                <label for="search" class="sr-only">Search</label>
+                <input
+                    required
+                    minlength="2"
+                    maxlength="24"
+                    type="search"
+                    name="search"
+                    id="search"
+                    placeholder="???"
+                    class=""
+                />
+                <p id="searchReadout"></p>
+            </form>
+        </section>
+        <br />
+        <!-- THIS IS WHERE THE SEARCH RESULTS ARE DISPLAYED -->
+        <!-- CANNOT HAVE LOADING ANIMATION ON THE SEARCH RESULTS, BECAUSE THEY JUST STAY INVISIBLE -->
+        <section aria-label="Search Results">
+            <ul id="resultsList"></ul>
+        </section>
+    </main>
+    <style>
+
+        /* THE FADE-IN ANIMATION THAT WOULD WORK FOR THE REST OF THE WEBSITE WILL BREAK THE SEARCH FUNCTIONALITY, SO INSTEAD OF USING INTERSECTION OBSERVER, WE JUST USE CSS TO FADE THESE IN */
+        @keyframes fadeInAnimation {
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+    <script>
+        // EVERYTHING IN THIS SCRIPT TAG HAS TO DO WITH HANDLING THE SEARCH FUNCTIONALITY
+
+        // DOMPurify SANITIZES THE INPUT FOR MALICIOUS CODE INJECTION
+        import DOMPurify from "dompurify";
+        import Fuse from "fuse.js";
+
+        let SEARCH_DATA;
+        let FUSE_INSTANCE;
+        const FUSE_OPTIONS = {
+            includeScore: true,
+            shouldSort: true,
+            // A LOW THRESHOLD MEANS MORE STRICT STRING MATCH
+            threshold: 0.4,
+            keys: [
+                {
+                    name: "title",
+                    weight: 1,
+                },
+                {
+                    name: "author",
+                    weight: 1,
+                },
+                {
+                    name: "description",
+                    weight: 1,
+                },
+            ],
+        };
+
+        const SPINNER = `<div class="flex justify-center"><span class="animate-spin">*</span><span class="animate-spin">*</span><span class="animate-spin">*</span>&nbsp;<span class="animate-pulse">Loading</span>&nbsp;<span class="animate-spin">*</span><span class="animate-spin">*</span><span class="animate-spin">*</span></div>`;
+
+        const search = document.querySelector("#search") as HTMLInputElement;
+        const searchReadout = document.querySelector("#searchReadout");
+        const resultsList = document.querySelector("#resultsList");
+
+        function updateDocumentTitle(search) {
+            document.title = search
+                ? `Search results for "${search}"`
+                : `Search for Articles`;
+        }
+
+        function updateSearchReadout(search) {
+            searchReadout.textContent = search
+                ? `Results for: "${search}"`
+                : `Search for Articles`;
+        }
+
+        function updateSearchPageURL(search) {
+            const url = new URL(window.location.href);
+            url.searchParams.set("q", search);
+            window.history.replaceState(null, "", url);
+        }
+
+        function generateSearchList(results) {
+            return results
+                .map((r) => {
+                    const { title, date, author, description, slug, ogImage } =
+                        r.item;
+                    const dateAsDate = new Date(date);
+                    /* THE FADE-IN ANIMATION THAT WOULD WORK FOR THE REST OF THE WEBSITE WILL BREAK THE SEARCH FUNCTIONALITY, SO INSTEAD OF USING INTERSECTION OBSERVER, WE JUST USE CSS TO FADE THESE IN */
+                    return `    
+                            <article class="post-preview-card-up" style="opacity: 0; animation: fadeInAnimation .25s ease-in .25s forwards;">
+                            <div>
+                            <time>
+                                ${dateAsDate.toLocaleString("en-US", {
+                                    timeZone: "America/Phoenix",
+                                    year: "2-digit",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
+                            </time>
+                            </div>
+                            <img src="${
+                                ogImage.src
+                            }" class="post-preview-image-up"/>
+                            <h3 class="mt-4 mb-2 text-5xl">
+                                ${title}
+                                </h3>
+                                <p>${description}</p>
+                            <p>-${author}</p>
+                            <br/>
+                            <a
+                                href="/archive/${slug}/"
+                                class="post-preview-link-button-up"
+                                >Read More >>>
+                            </a>
+                            </article>
+                            `;
+                })
+                .join("");
+        }
+
+        async function fetchResultsList(search) {
+            if (search.length === 0) return;
+
+            resultsList.innerHTML = SPINNER;
+
+            if (!SEARCH_DATA) {
+                try {
+                    const res = await fetch("/search.json");
+                    if (!res.ok) {
+                        throw new Error(
+                            "Something went wrong- please try again."
+                        );
+                    }
+                    const data = await res.json();
+                    SEARCH_DATA = data;
+                    console.log(data);
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+            if (SEARCH_DATA && !FUSE_INSTANCE) {
+                FUSE_INSTANCE = new Fuse(SEARCH_DATA, FUSE_OPTIONS);
+            }
+            if (!FUSE_INSTANCE) return;
+            const searchResult = FUSE_INSTANCE.search(search);
+            resultsList.innerHTML =
+                searchResult.length > 0
+                    ? generateSearchList(searchResult)
+                    : `<div class="text-center col-span-2">No results found.</div>`;
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            // DOMPurify SANITIZING
+            const urlParams = DOMPurify.sanitize(
+                new URLSearchParams(window.location.search).get("q")
+            );
+
+            if (search) {
+                // Check if search element is not null
+                fetchResultsList(urlParams);
+                updateDocumentTitle(urlParams);
+                updateSearchReadout(urlParams);
+                search.value = urlParams;
+                search.focus();
+            }
+        });
+
+        search.addEventListener("input", () => {
+            // DOMPurify SANITIZING
+            const searchTerm = DOMPurify.sanitize(search.value);
+
+            // Check if the searchTerm length is at least 2
+            if (searchTerm.length >= 2) {
+                updateDocumentTitle(searchTerm);
+                updateSearchReadout(searchTerm);
+                fetchResultsList(searchTerm);
+                updateSearchPageURL(searchTerm);
+            } else {
+                // Clear the results and update the readout to default if less than 2 characters
+                resultsList.innerHTML = "";
+                updateDocumentTitle("");
+                updateSearchReadout("");
+            }
+        });
+    </script>
+</PageLayout>

@@ -1,0 +1,152 @@
+---
+import { getCollection } from "astro:content";
+import PageLayout from "../../layouts/PageLayout.astro";
+import SearchWidget from "../../components/SearchWidget.astro";
+
+// Fetch and sort posts
+export async function getStaticPaths({ paginate }) {
+    const unsortedPosts = await getCollection("archive");
+    const sortedPosts = unsortedPosts.sort((a, b) => {
+        const dateA = new Date(a.data.date).getTime();
+        const dateB = new Date(b.data.date).getTime();
+        return dateB - dateA;
+    });
+
+    // Paginate sorted posts
+    return paginate(sortedPosts, { pageSize: 5 });
+}
+
+const { page } = Astro.props as { page: any };
+
+// Function to calculate page range
+function calculatePageRange(currentPage, totalPageCount, range = 3) {
+    let startPage = Math.max(currentPage - range, 1);
+    let endPage = Math.min(currentPage + range, totalPageCount);
+
+    let pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+    }
+    return pages;
+}
+
+const pageRange = calculatePageRange(page.currentPage, page.lastPage);
+
+// SETTING THE CANONICAL URL
+const siteUrl = 'https://.';
+const canonicalURL = `${siteUrl}/archive/${page.currentPage}`;
+---
+
+<PageLayout
+    title="Out of Range - Archive"
+    description="you can search through all our published articles on this page- the article archive"
+    keywords="music, blog, music blog, arizona, underground music, underground art, local arizona music, local arizona art, local arizona blog"
+    canonicalURL={canonicalURL}
+    robotsContent="index, follow"
+>
+    <!-- LOADING ANIMATION IS DEFINED IN THE POSTLAYOUT FILE -->
+    <main class="loading-animation-nt">
+        <section class="text-center">
+            <header class="page-header-border-up">
+                <h1 class="page-header-text-up">
+                    Out of Range Underground Music & Arts -
+                    Article Archive
+                </h1>
+            </header>
+            <br />
+            <div class="max-w-md mx-auto">
+                
+                <p>
+                    &#10697; This page contains links to all articles available
+                    on this site.
+                </p>
+            </div>
+            <br />
+            <SearchWidget />
+            <br/>
+        </section>
+        <br />
+        <!-- ARCHIVE ARTICLE SECTION -->
+        <section class="max-w-3xl mx-auto -mb-4 lg:-mt-8">
+            {
+                page.data.map((post) => (
+                    <article
+                        data-title={post.data.title.toLowerCase()}
+                        data-description={post.data.description.toLowerCase()}
+                        class="post-preview-card-up"
+                    >
+                        <img
+                            src={post.data.ogImage.src}
+                            alt=""
+                            class="post-preview-image-up"
+                        />
+                        <h2 class="text-5xl mt-4">{post.data.title}</h2>
+                        <p>{post.data.description}</p>
+                        <p>-{post.data.author}</p>
+                        <br />
+                        <div class="mb-2">
+                            <a
+                                href={"/archive/" + post.slug}
+                                class="post-preview-link-button-up"
+                            >
+                                Read More {">>>"}
+                            </a>
+                        </div>
+                    </article>
+                ))
+            }
+        </section>
+
+        <!-- Pagination Navigation -->
+        <section
+            class="pagination text-center flex flex-col justify-center items-center space-y-2 pt-2"
+        >
+            <div class="flex justify-center items-center space-x-4 lg:mt-4">
+                {
+                    page.url.prev ? (
+                        <a
+                            href={page.url.prev}
+                            class="link-underline-plus-offset-up"
+                        >
+                            {"<<< "}Previous
+                        </a>
+                    ) : null
+                }
+
+                {page.url.prev && page.url.next ? <span>/</span> : null}
+
+                {
+                    page.url.next ? (
+                        <a
+                            href={page.url.next}
+                            class="link-underline-plus-offset-up"
+                        >
+                            Next{" >>>"}
+                        </a>
+                    ) : null
+                }
+            </div>
+
+            <div class="flex flex-wrap justify-center items-center space-x-4">
+                {
+                    pageRange.map((pageNum) => (
+                        <a
+                            href={
+                                pageNum === 1
+                                    ? `/archive/`
+                                    : `/archive/${pageNum}`
+                            }
+                            class={`${
+                                pageNum === page.currentPage
+                                    ? "current-page "
+                                    : ""
+                            }link-underline-plus-offset-up`}
+                        >
+                            {pageNum}
+                        </a>
+                    ))
+                }
+            </div>
+        </section>
+    </main>
+</PageLayout>

@@ -1,0 +1,52 @@
+---
+import { getCollection } from "astro:content";
+
+// Fetch posts
+const unsortedPosts = await getCollection("archive");
+
+// Sort posts by date
+const sortedPosts = unsortedPosts.sort((a, b) => {
+    const dateA = new Date(a.data.date).getTime(); // Convert to timestamp
+    const dateB = new Date(b.data.date).getTime(); // Convert to timestamp
+    return dateB - dateA;
+});
+
+// Remove the last post
+if (sortedPosts.length > 0) {
+  sortedPosts.pop();
+}
+
+interface Props {
+    postNumber: number;
+}
+
+const { postNumber } = Astro.props;
+---
+
+<section class="lg:mt-8">
+    {
+        // Check if the post exists
+        sortedPosts.length > postNumber && sortedPosts[postNumber] ? (
+            <article class="post-preview-card-up">
+                <img
+                    src={sortedPosts[postNumber].data.ogImage.src}
+                    alt={sortedPosts[postNumber].data.title}
+                    class="post-preview-image-up"
+                />
+                <h2 class="text-5xl tracking-tight mt-4">
+                    {sortedPosts[postNumber].data.title}
+                </h2>
+                <p>{sortedPosts[postNumber].data.description}</p>
+                <p>-{sortedPosts[postNumber].data.author}</p>
+                <br />
+                <a
+                    href={"/archive/" + sortedPosts[postNumber].slug}
+                    class="post-preview-link-button-up"
+                >
+                    Read More
+                    {" >>>"}
+                </a>
+            </article>
+        ) : null
+    }
+</section>

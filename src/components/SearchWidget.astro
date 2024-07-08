@@ -1,0 +1,44 @@
+---
+---
+
+<form class="form">
+    <label for="search" class="sr-only">Search</label>
+    <button
+        type="submit"
+        class=""
+    >
+        Search
+    </button>&nbsp;
+    <input
+        required
+        minlength="2"
+        maxlength="24"
+        type="search"
+        name="search"
+        id="search"
+        placeholder="???"
+        class=""
+    />
+</form>
+
+<script>
+    // DOMPurify SANITIZES THE INPUT FOR MALICIOUS CODE INJECTION
+    import DOMPurify from "dompurify";
+    const form = document.querySelector("form");
+    form?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        // DOMPurify SANITIZING
+        const searchTerm = DOMPurify.sanitize(
+            formData.get("search")?.toString()
+        );
+
+        if (!searchTerm || searchTerm.length === 0) return;
+
+        const url = new URL("/search", window.location.origin);
+
+        url.searchParams.set("q", searchTerm);
+
+        window.location.assign(url.toString());
+    });
+</script>

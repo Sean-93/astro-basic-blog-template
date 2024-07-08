@@ -1,0 +1,44 @@
+---
+import { getCollection } from "astro:content";
+
+// Fetch posts
+const unsortedPosts = await getCollection("archive");
+
+// Sort posts by date
+const sortedPosts = unsortedPosts.sort((a, b) => {
+    const dateA = new Date(a.data.date).getTime(); // Convert to timestamp
+    const dateB = new Date(b.data.date).getTime(); // Convert to timestamp
+    return dateB - dateA;
+});
+---
+
+<section>
+    {
+        // Check if there is at least one post and render only the oldest post
+        sortedPosts.length > 0 ? (
+            <article class="post-preview-card-up">
+                <img
+                    src={sortedPosts[sortedPosts.length - 1].data.ogImage.src}
+                    alt={sortedPosts[sortedPosts.length - 1].data.title}
+                    class="post-preview-image-up"
+                />
+
+                <h2 class="text-5xl tracking-tight mt-4">
+                    {sortedPosts[sortedPosts.length - 1].data.title}
+                </h2>
+                <p>{sortedPosts[sortedPosts.length - 1].data.description}</p>
+                <p>-{sortedPosts[sortedPosts.length - 1].data.author}</p>
+                <br />
+                <a
+                    href={
+                        "/archive/" + sortedPosts[sortedPosts.length - 1].slug
+                    }
+                    class="post-preview-link-button-up"
+                >
+                    Read More
+                    {" >>>"}
+                </a>
+            </article>
+        ) : null
+    }
+</section>

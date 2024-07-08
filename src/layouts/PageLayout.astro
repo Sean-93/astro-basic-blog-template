@@ -1,0 +1,73 @@
+---
+interface Props {
+	title: string;
+	description: string;
+	keywords: string;
+	canonicalURL: string;
+	robotsContent: string;
+}
+
+const { title, description, keywords, canonicalURL, robotsContent } =
+	Astro.props;
+
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- THEME COLOR CHANGES DEPENDING ON THEME, BUT DEFAULT IS BLACK -->
+		<meta name="theme-color" content="#000000" />
+		<!-- THIS FAVICON CHANGES DEPENDING ON THE THEME -->
+		<link rel="icon" type="image/png" href="fdfdsf" id="theme-favicon" />
+
+		<!-- TITLE -->
+		<title>{title}</title>
+		<!-- DESCRIPTION -->
+		<meta name="description" content={description} />
+		<!-- KEYWORDS -->
+		<meta name="keywords" content={keywords} />
+		<!-- CANONICAL URL -->
+		<link rel="canonical" href={canonicalURL} />
+		<!-- AUTHOR -->
+		<meta
+			name="author"
+			content="Developed by Sean Rooney"
+		/>
+
+		<!-- OPENGRAPH TAGS (SOCIAL MEDIA) -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalURL} />
+
+		<!-- TWITTER/X CARD DATA -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+
+		<!-- ROBOTS -->
+		<meta name="robots" content={robotsContent} />
+
+		<!-- ASTRO GENERATOR -->
+		<meta name="generator" content={Astro.generator} />
+	</head>
+	<body class="bg-slate-100 min-h-[100vh]">
+		<div class="max-w-3xl mx-auto px-4">
+			<Navbar />
+			<br />
+			<slot />
+			<br />
+			<Footer />
+		</div>
+		<style is:global>
+		
+		</style>
+		<script is:inline>
+		
+		</script>
+	</body>
+</html>

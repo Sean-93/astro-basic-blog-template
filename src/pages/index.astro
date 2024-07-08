@@ -1,0 +1,26 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+import FirstPost from "../components/FirstPost.astro";
+import PostPreview from "../components/PostPreview.astro";
+
+---
+
+<PageLayout
+  title=""
+  description=""
+  keywords=""
+  canonicalURL="https://."
+  robotsContent="index, follow"
+>
+  <br />
+  <!-- LOADING ANIMATION IS DEFINED IN THE POSTLAYOUT FILE -->
+  <main class="loading-animation-nt">
+    <FirstPost />
+    <div id="most-recent-articles">
+      <PostPreview postNumber={0} />
+      <PostPreview postNumber={1} />
+      <PostPreview postNumber={2} />
+      <PostPreview postNumber={3} />
+    </div>
+  </main>
+</PageLayout>
